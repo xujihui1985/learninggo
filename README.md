@@ -1,4 +1,4 @@
 learninggo
 ==========
 
-a playground to learn go lang
+a playground to learn golang
