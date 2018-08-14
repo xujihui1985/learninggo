@@ -40,6 +40,6 @@ func main() {
 }
 
 EOF
-``
+```
 
 go run $GOPATH/src/hellogo/main.go
