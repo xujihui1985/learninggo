@@ -42,8 +42,8 @@ func (*Solar) Store(d *Data) error {
 
 // We should embed for behaiver
 type System struct {
-	Xenia
-	Solar
+	Puller
+	Storer
 }
 
 func pull(p Puller, data []Data) (int, error) {
@@ -76,8 +76,8 @@ func Copy(ps PullStorer, batch int) error {
 
 func main() {
 	sys := System{
-		Xenia: Xenia{},
-		Solar: Solar{},
+		Puller: &Xenia{},
+		Storer: &Solar{},
 	}
 
 	if err := Copy(&sys, 3); err != io.EOF {
