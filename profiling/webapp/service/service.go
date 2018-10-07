@@ -25,6 +25,7 @@ var handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "hello")
 })
 
+// Run run app server
 func Run() {
 	router := http.NewServeMux()
 	router.Handle("/search", handler)
@@ -33,7 +34,7 @@ func Run() {
 	readTimeout := 10 * time.Second
 	writeTimeout := 31 * time.Second
 	idleTimeout := 15 * time.Second
-	server := http.Server{
+	server := &http.Server{
 		Addr:         host,
 		Handler:      tracing(nextRequestID)(router),
 		ReadTimeout:  readTimeout,

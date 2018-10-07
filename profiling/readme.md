@@ -62,6 +62,7 @@ gc 109 @18.728s 3%: 0.17+2.4+0.45 ms clock, 0.68+0.28/1.4/0+1.8 ms cpu, 4->4->1 
 gc 110 @18.893s 3%: 0.043+1.2+0.065 ms clock, 0.17+1.2/0.77/0+0.26 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
 gc 111 @18.959s 3%: 0.15+0.88+0.062 ms clock, 0.60+1.3/0.63/0+0.25 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
 gc 112 @19.055s 3%: 27+2.6+0.069 ms clock, 109+0.55/1.3/0+0.27 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+GC forced
 ```
 
 explain
@@ -81,6 +82,8 @@ gc #        the GC number, incremented at each GC
   If the line ends with "(forced)", this GC was forced by a
   runtime.GC() call and all phases are STW.
 
+> you will see GC forced when cpu is idle to run, and gc will force itself to run
+
 ```
 垃圾回收信息
 gc 1 @2.104s 0%: 0.018+1.3+0.076 ms clock, 0.054+0.35/1.0/3.0+0.23 ms cpu, 4->4->3 MB, 5 MB goal, 4 P。
@@ -95,5 +98,69 @@ gc 1 @2.104s 0%: 0.018+1.3+0.076 ms clock, 0.054+0.35/1.0/3.0+0.23 ms cpu, 4->4-
 
 #### Memory Profiling
 
-#### Block Profiling
+start pprof endpoint, see webapp/debug/debug.go
+
+after start pprof endpoint, we can inspect pprof endpoint from `/debug/pprof`
+
+to start an interactive terminal, 
+
+```bash
+go tool pprof -alloc_space http://localhost:8000/debug/pprof/allocs
+```
+
+```
+(pprof) top 40 -cum
+Showing nodes accounting for 268.58MB, 98.53% of 272.60MB total
+Dropped 34 nodes (cum <= 1.36MB)
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%   262.59MB 96.33%  net/http.(*conn).serve
+   34.01MB 12.47% 12.47%   139.55MB 51.19%  net/http.(*conn).readRequest
+         0     0% 12.47%   121.04MB 44.40%  net/http.HandlerFunc.ServeHTTP
+         0     0% 12.47%   121.04MB 44.40%  net/http.serverHandler.ServeHTTP
+    0.50MB  0.18% 12.66%   120.03MB 44.03%  github.com/xujihui1985/learninggo/profiling/webapp/service.tracing.func1.1
+   21.51MB  7.89% 20.55%    78.52MB 28.80%  net/http.readRequest
+   43.51MB 15.96% 36.51%    43.51MB 15.96%  net/textproto.(*Reader).ReadMIMEHeader
+         0     0% 36.51%    40.01MB 14.68%  net/http.Header.Set
+   40.01MB 14.68% 51.19%    40.01MB 14.68%  net/textproto.MIMEHeader.Set
+```
+
+```
+(pprof) list nextRequestID
+Total: 272.60MB
+ROUTINE ======================== github.com/xujihui1985/learninggo/profiling/webapp/service.nextRequestID in /Users/sean/work/goworkspace/src/github.com/xujihui1985/learninggo/profiling/webapp/service/service.go
+  512.01kB     2.50MB (flat, cum)  0.92% of Total
+         .          .     60:           log.Fatalf("could not listen on %s, %v", host, err)
+         .          .     61:   }
+         .          .     62:}
+         .          .     63:
+         .          .     64:func nextRequestID() string {
+  512.01kB     2.50MB     65:   return fmt.Sprintf("%d", time.Now().UnixNano())
+         .          .     66:}
+         .          .     67:
+         .          .     68:func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
+         .          .     69:   return func(next http.Handler) http.Handler {
+         .          .     70:           return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+(pprof) web list nextRequestID
+```
+
+#### difference between allocs and heap
+
+allocs default mode is allocs space, which is a sampling of all past memory allocations
+heap default mode is inuse_spac, which is a sampling of memory allocations of live objects
+
+#### cpu profile
+
+```bash
+go tool pprof http://localhost:8000/debug/pprof/profile\?seconds=5
+```
+
+#### execution tracing
+
+```bash
+go build
+./tracing > t.out  // generate tracing file
+go tool trace t.out // analize the tracing file
+```
+
+
 

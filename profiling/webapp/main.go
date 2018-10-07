@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/xujihui1985/learninggo/profiling/webapp/debug"
 	"github.com/xujihui1985/learninggo/profiling/webapp/service"
 )
 
@@ -27,6 +28,6 @@ func expvars() {
 
 func main() {
 	expvars()
+	debug.Run()
 	service.Run()
-
 }
