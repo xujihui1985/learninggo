@@ -1,0 +1,39 @@
+package main
+
+import (
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	)
+
+func main() {
+  if len(os.Args) != 2 {
+	fmt.Println("missing file name")
+	  os.Exit(1)
+  }
+
+fileName := os.Args[1]
+			// writeFile(fileName)
+			readFull(fileName)
+}
+
+func writeFile(fileName string) {
+b := []byte("hello world")
+	 ioutil.WriteFile(fileName, b, 0644)
+}
+
+func readFull(fileName string) {
+  f, err := os.Open(fileName)
+	if err != nil {
+	  panic(err)
+	}
+  defer f.Close()
+
+	var b [10]byte
+	if _, err := io.ReadFull(f, b[0:]); err != nil {
+	  fmt.Println(err)
+	}
+  fmt.Println(string(b[:]))
+}
+
