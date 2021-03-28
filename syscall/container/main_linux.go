@@ -4,8 +4,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"syscall"
 )
 
@@ -31,6 +34,16 @@ func run() {
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
+		// use user ns enable you to do something with root privilege inside container
+		// notice that at this moment you can not use cgroup along with NEWUSER flag
+		// | syscall.CLONE_NEWUSER,
+		// Credential: &syscall.Credential{Uid: 0, Gid 0},
+		// UidMappings: []syscall.SysProcIDMap {
+		// 	{ContainerID: 0, HostID: os.Getpid(), Size: 1}
+		// },
+		// GidMappings: []syscall.SysProcIDMap {
+		// 	{ContainerID: 0, HostID: os.Getpid(), Size: 1}
+		// },
 	}
 
 	cmd.Run()
@@ -39,6 +52,7 @@ func run() {
 func child() {
 	fmt.Printf("Running inside container %v\n", os.Args[2:])
 
+	cgroup()
 	cmd := exec.Command(os.Args[2], os.Args[3:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -52,6 +66,22 @@ func child() {
 	must(cmd.Run())
 	must(syscall.Unmount("proc", 0))
 	must(syscall.Unmount("mytemp", 0))
+}
+
+func cgroup() {
+	cgroups := "/sys/fs/cgroup"
+
+	mem := filepath.Join(cgroups, "memory")
+	myCgroup := filepath.Join(filepath.Join(mem, "sean"))
+	os.Mkdir(myCgroup, 0755)
+
+	must(ioutil.WriteFile(filepath.Join(myCgroup, "memory.limit_in_bytes"), []byte("999424"), 0700))
+	must(ioutil.WriteFile(filepath.Join(myCgroup, "memory.memsw.limit_in_bytes"), []byte("999424"), 0700))
+	must(ioutil.WriteFile(filepath.Join(myCgroup, "notify_on_release"), []byte("1"), 0700))
+
+	pid := strconv.Itoa(os.Getpid())
+	must(ioutil.WriteFile(filepath.Join(myCgroup, "cgroup.procs"), []byte(pid), 0700))
+
 }
 
 func must(err error) {
