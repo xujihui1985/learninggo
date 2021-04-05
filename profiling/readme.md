@@ -162,5 +162,19 @@ go build
 go tool trace t.out // analize the tracing file
 ```
 
+#### toolexec
 
+```bash
+go build -toolexec="/usr/bin/time" cmd/compile/internal/gc
+```
+for linux user, we can use pref to profile go application
+
+```
+go build -toolexec="perf stat" cmd/compile/internal/gc
+
+```
+
+#### Flame graph
+
+go-torch
 
