@@ -36,6 +36,9 @@ type Person struct {
 func cloneSlice() {
 	var s []Person = nil
 	s2 := s[:]
+	// This solution guarantees that b is nil if a is nil and b is not nil if a is no nil.
+	// It makes using of the fact that a slice derived from a nil slice is still a nil slice.
+	// And the three-index subslice form ensures that the result slice will not share any elements with the source slice.
 	sClone := append(s[:0:0], s...)
 	fmt.Println(sClone == nil)
 	fmt.Println(s2)
